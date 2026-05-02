@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Smart Scanner</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#22c55e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; }
+        .scanner-line {
+            height: 2px;
+            background: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 15px #22c55e;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            animation: scan 3s infinite linear;
+            z-index: 10;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        #video { transform: scaleX(-1); } /* Mirror for front, but we'll use back cam */
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between h-screen p-4">
+    <header class="w-full text-center py-4">
+        <h1 class="text-2xl font-bold text-green-500 uppercase tracking-widest">AI Smart Scanner</h1>
+        <p class="text-xs text-slate-400">Powered by Gemini CLI & Python</p>
+    </header>
+
+    <div class="relative w-full max-w-md aspect-[3/4] bg-black rounded-3xl overflow-hidden border-4 border-slate-800 shadow-2xl">
+        <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+        <div id="scannerLine" class="scanner-line hidden"></div>
+        <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <div id="status" class="text-sm text-slate-300 h-8 mt-2 text-center">Ready to scan...</div>
+
+    <footer class="w-full max-w-md pb-8 flex justify-center gap-6">
+        <button id="captureBtn" class="w-20 h-20 bg-white rounded-full border-8 border-slate-700 active:scale-95 transition-transform shadow-lg shadow-green-500/20 flex items-center justify-center">
+            <div class="w-14 h-14 bg-green-500 rounded-full"></div>
+        </button>
+    </footer>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('captureBtn');
+        const status = document.getElementById('status');
+        const scannerLine = document.getElementById('scannerLine');
+
+        // Access the back camera
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                status.innerText = "Error: Camera access denied.";
+                status.classList.add('text-red-500');
+            }
+        }
+
+        captureBtn.addEventListener('click', async () => {
+            status.innerText = "📸 Capturing...";
+            scannerLine.classList.remove('hidden');
+            
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            const formData = new FormData();
+            formData.append('file', blob, 'scan.jpg');
+
+            status.innerText = "🧠 AI Processing...";
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.innerText = "✅ Done! PDF Saved.";
+                    status.classList.replace('text-slate-300', 'text-green-500');
+                    setTimeout(() => {
+                        status.innerText = "Ready for next scan...";
+                        status.classList.replace('text-green-500', 'text-slate-300');
+                        scannerLine.classList.add('hidden');
+                    }, 3000);
+                } else {
+                    status.innerText = "❌ Error: " + data.error;
+                }
+            } catch (err) {
+                status.innerText = "❌ Network Error.";
+            }
+        });
+
+        initCamera();
+    </script>
+</body>
+</html>

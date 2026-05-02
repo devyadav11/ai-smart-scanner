@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+smart_agent/uploads/*
+smart_agent/output/*
+/storage/emulated/0/scanned document/*
+test_input.jpg
+test_enhanced.jpg
+test_output.pdf
+.env
+.DS_Store
+*.jpg
+*.pdf
