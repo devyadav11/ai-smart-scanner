@@ -1,13 +1,21 @@
 import os
 import subprocess
+import time
 from rich.console import Console
 
 console = Console()
 
-def speak(text):
-    """Convert text to speech using termux-tts-speak."""
+def speak(text, rate=0.8, pause=1.0):
+    """
+    Convert text to speech using termux-tts-speak.
+    rate: 1.0 is normal, lower is slower.
+    pause: seconds to wait after speaking.
+    """
     console.print(f"[italic cyan]AI Says: {text}[/italic cyan]")
-    os.system(f"termux-tts-speak \"{text}\"")
+    # Use -r flag to slow down speech
+    os.system(f"termux-tts-speak -r {rate} \"{text}\"")
+    # Add a small pause to give user time to react
+    time.sleep(pause)
 
 def listen():
     """Listen for voice input using termux-speech-to-text."""

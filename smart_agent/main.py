@@ -16,23 +16,30 @@ def scan_document():
     
     if not os.path.exists(img) or os.path.getsize(img) == 0:
         speak("Error. I couldn't capture the photo.")
-        console.print("[bold red]Error: Photo not saved or is empty. Make sure Termux-API is working and camera permissions are granted.[/bold red]")
+        console.print("[bold red]Error: Photo not saved or is empty.[/bold red]")
         return
 
-    speak("Processing image.")
+    speak("Enhancing the image.")
     console.print("[bold blue]🧹 Enhancing...[/bold blue]")
     enhanced = enhance_image(img, "smart_agent/output/enhanced.jpg")
 
-    console.print("[bold blue]📄 Creating PDF...[/bold blue]")
-    pdf = image_to_pdf(enhanced, "smart_agent/output/scanned_doc.pdf")
+    temp_pdf = "smart_agent/output/temp_scan.pdf"
+    image_to_pdf(enhanced, temp_pdf)
 
-    console.print("[bold blue]🔍 Extracting text (OCR)...[/bold blue]")
+    # Organize in public storage (Timestamp based)
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    public_dir = "/storage/emulated/0/Documents/scanned document"
+    os.makedirs(public_dir, exist_ok=True)
+    
+    final_path = os.path.join(public_dir, f"Scan_{timestamp}.pdf")
+    import shutil
+    shutil.copy(temp_pdf, final_path)
+    
+    speak("Done. I have saved your document.")
+    console.print(f"[bold green]✅ Saved to:[/bold green] {final_path}")
+    
     text = extract_text(enhanced)
-    
-    speak("Scan complete. PDF is ready.")
-    console.print(f"[bold green]✅ Done![/bold green]")
-    console.print(f"PDF saved to: [cyan]{pdf}[/cyan]")
-    
     if text.strip():
         console.print("[bold yellow]OCR Preview:[/bold yellow]")
         console.print(text[:200] + ("..." if len(text) > 200 else ""))

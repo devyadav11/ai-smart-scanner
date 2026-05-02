@@ -13,8 +13,11 @@ app = FastAPI()
 # Create necessary directories
 UPLOAD_DIR = "smart_agent/uploads"
 OUTPUT_DIR = "smart_agent/output"
+PUBLIC_BASE_DIR = "/storage/emulated/0/Documents/scanned document"
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(PUBLIC_BASE_DIR, exist_ok=True)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="smart_agent/static"), name="static")
@@ -33,41 +36,31 @@ async def upload_image(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
         
         # 2. Pipeline: Enhance -> PDF -> OCR
-        speak("Processing scan from web app.")
+        speak("I have received your document. Enhancing it now.")
         
         enhanced_path = os.path.join(OUTPUT_DIR, "enhanced.jpg")
         enhance_image(input_path, enhanced_path)
         
-        pdf_path = os.path.join(OUTPUT_DIR, "web_scan.pdf")
-        image_to_pdf(enhanced_path, pdf_path)
+        temp_pdf_path = os.path.join(OUTPUT_DIR, "temp_scan.pdf")
+        image_to_pdf(enhanced_path, temp_pdf_path)
         
-        # 3. Move to Public 'scanned document' Folder
+        # 3. Local Organization (Timestamp based)
         from datetime import datetime
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        public_dir = "/storage/emulated/0/scanned document"
         
-        try:
-            if not os.path.exists(public_dir):
-                os.makedirs(public_dir, exist_ok=True)
-                print(f"Created public directory: {public_dir}")
-            
-            public_pdf_path = os.path.join(public_dir, f"Scan_{timestamp}.pdf")
-            shutil.copy(pdf_path, public_pdf_path)
-            print(f"Copied to public storage: {public_pdf_path}")
-            display_msg = f"Saved to: scanned document/Scan_{timestamp}.pdf"
-        except Exception as e:
-            print(f"Public storage copy failed: {e}")
-            display_msg = "Document processed (Local Only)"
-
+        final_filename = f"Scan_{timestamp}.pdf"
+        public_pdf_path = os.path.join(PUBLIC_BASE_DIR, final_filename)
+        
+        shutil.copy(temp_pdf_path, public_pdf_path)
+        
         text = extract_text(enhanced_path)
-        
-        speak("Scan complete. Your PDF is ready.")
+        speak("Scan complete. I have saved the PDF to your scanned document folder.")
         
         return {
             "success": True, 
-            "pdf": pdf_path, 
+            "filename": final_filename,
             "ocr_preview": text[:100],
-            "message": display_msg
+            "message": f"Saved as {final_filename}"
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
