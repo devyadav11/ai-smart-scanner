@@ -5,10 +5,10 @@ An autonomous, voice-controlled, and web-enabled document scanner built entirely
 ## 🌟 Features
 
 - **🚀 Autonomous Pipeline:** Automatically enhances images, converts them to PDF, and extracts text (OCR).
-- **🎙️ Voice Interaction:** "Hey AI, scan this!" - Fully voice-controlled using Termux-API.
+- **🎙️ Voice Interaction:** "Hey AI, scan this!" - Fully voice-controlled using Termux-API with natural timing.
 - **🌐 Web App & PWA:** Modern web interface to bypass hardware limitations, installable as a native app on your home screen.
-- **📁 Smart Storage:** Automatically saves unique, timestamped PDFs to a dedicated `scanned document` folder in your phone's internal storage.
-- **🧠 AI Swarm Ready:** Built to support a multi-agent "Swarm" architecture for intelligent document classification and auto-organization.
+- **📁 Smart Storage:** Automatically saves unique, timestamped PDFs to a dedicated `scanned document` folder inside your phone's **Documents** folder.
+- **🔒 100% Local:** No API keys required. All processing (OCR, Enhancement, PDF) happens entirely on your phone.
 
 ## 🛠️ Tech Stack
 
@@ -47,3 +47,4 @@ Then open `http://localhost:5000` in your browser.
 
 ## ⚖️ License
 MIT
+<!-- Automated Sync Active -->
